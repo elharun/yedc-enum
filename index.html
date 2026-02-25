@@ -3,131 +3,471 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YEDC Bulk - Katuzu DS0097</title>
+    <title>YEDC Smart Enumeration - DS 0097</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        :root { --kali-blue: #007bff; --kali-dark: #121212; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: var(--kali-dark); color: #e0e0e0; padding: 10px; }
-        .container { max-width: 600px; margin: auto; background: #222; padding: 20px; border-radius: 12px; border: 1px solid #444; }
-        h2 { text-align: center; color: var(--kali-blue); margin-bottom: 20px; font-size: 1.1em; text-transform: uppercase; }
-        .counter { background: #333; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 15px; color: #00ff00; font-weight: bold; }
+        :root { --kali-blue: #007bff; --kali-dark: #1a1a1a; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #2e2e2e; color: #e0e0e0; padding: 20px; }
+        .container { max-width: 900px; margin: auto; background: #3c3c3c; padding: 25px; border-radius: 10px; border: 1px solid #555; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h2 { text-align: center; color: var(--kali-blue); border-bottom: 2px solid #555; padding-bottom: 10px; margin-top: 0; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .form-group { margin-bottom: 12px; }
-        label { display: block; margin-bottom: 4px; font-size: 0.7em; color: #888; text-transform: uppercase; }
-        input { width: 100%; padding: 12px; background: #000; border: 1px solid #444; color: #fff; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
-        .fixed { background: #252525 !important; color: #666 !important; cursor: not-allowed; text-align: center; font-weight: bold; }
-        .gps-btn { background: #6f42c1; color: white; width: 100%; padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin: 10px 0; }
-        .btn-row { display: flex; gap: 10px; margin-top: 20px; }
-        .add-btn { background: #28a745; color: white; flex: 2; padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .export-btn { background: #d84315; color: white; flex: 1; padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .table-area { margin-top: 20px; max-height: 200px; overflow-y: auto; border: 1px solid #333; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.7em; }
-        th, td { border: 1px solid #333; padding: 8px; text-align: left; }
+        label { display: block; margin-bottom: 5px; font-size: 0.85em; color: #bbb; font-weight: bold; }
+        input { width: 100%; padding: 12px; background: #222; border: 1px solid #444; color: white; border-radius: 5px; box-sizing: border-box; font-size: 16px; transition: 0.3s; }
+        input:focus { border-color: var(--kali-blue); outline: none; background: #2a2a2a; box-shadow: 0 0 5px var(--kali-blue); }
+        .permanent-info { background: #444 !important; color: #00ff00; font-weight: bold; text-align: center; }
+        .btn-row { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
+        button { flex: 1; min-width: 150px; padding: 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s; font-size: 14px; text-transform: uppercase; }
+        .gps-btn { background: #6f42c1; color: white; }
+        .add-btn { background: #28a745; color: white; }
+        .excel-btn { background: #fd7e14; color: white; }
+        table { width: 100%; margin-top: 30px; border-collapse: collapse; background: #222; font-size: 0.8em; }
+        th, td { border: 1px solid #444; padding: 10px; text-align: left; }
+        th { background: #111; color: var(--kali-blue); }
+        .autofill-hint { color: #00ff00; font-size: 0.75em; margin-top: 4px; display: none; font-style: italic; }
+        .counter-badge { background: #555; color: #00ff00; padding: 5px 15px; border-radius: 5px; float: right; font-family: monospace; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Katuzu Bulk Enumeration</h2>
-    <div class="counter">Total Records: <span id="count">0</span></div>
-
+    <div class="counter-badge">Records: <span id="recordCount">0</span></div>
+    <h2>⚡ YEDC DATA ENUMERATION (DT: DS 0097)</h2>
+    
+    <div class="grid">
+        <div class="form-group">
+            <label>S/N</label>
+            <input type="number" id="sn" value="1">
+        </div>
+        <div class="form-group">
+            <label>DT Code (Fixed)</label>
+            <input type="text" id="dtCode" value="DS 0097" class="permanent-info" readonly>
+        </div>
+        <div class="form-group">
+            <label>Account Number (Type to Autofill)</label>
+            <input type="text" id="accNum" oninput="handleAutofill(this.value)" placeholder="Enter Number...">
+            <div id="hint" class="autofill-hint">✓ Customer Found</div>
+        </div>
+        <div class="form-group">
+            <label>Account Name</label>
+            <input type="text" id="accName" class="permanent-info" readonly placeholder="Auto-fills...">
+        </div>
+        <div class="form-group">
+            <label>Old Feeder</label>
+            <input type="text" id="oldFeeder" value="11kv GASHUA II" class="permanent-info" readonly>
+        </div>
+        <div class="form-group">
+            <label>New Feeder</label>
+            <input type="text" id="newFeeder" value="33kv GEIDAM" class="permanent-info" readonly>
+        </div>
+        <div class="form-group">
+            <label>Longitude</label>
+            <input type="text" id="longitude" readonly placeholder="Wait for GPS...">
+        </div>
+        <div class="form-group">
+            <label>Latitude</label>
+            <input type="text" id="latitude" readonly placeholder="Wait for GPS...">
+        </div>
+    </div>
+    
     <div class="form-group">
-        <label>Account Number</label>
-        <input type="text" id="accNum" oninput="lookup(this.value)" placeholder="Start typing...">
+        <label>Remarks</label>
+        <input type="text" id="remark">
     </div>
 
-    <div class="form-group">
-        <label>Customer Name</label>
-        <input type="text" id="accName" class="fixed" readonly>
-    </div>
-
-    <div style="display: flex; gap: 10px;">
-        <div class="form-group" style="flex:1"><label>Address</label><input type="text" value="Katuzu" class="fixed" readonly></div>
-        <div class="form-group" style="flex:1"><label>DT Code</label><input type="text" value="DS0097" class="fixed" readonly></div>
-    </div>
-
-    <div class="form-group">
-        <label>New Feeder</label>
-        <input type="text" value="33kv GEIDAM" class="fixed" readonly>
-    </div>
-
-    <button class="gps-btn" onclick="getGPS()">📍 CAPTURE GPS</button>
-
-    <div style="display: flex; gap: 10px;">
-        <input type="text" id="lon" class="fixed" readonly placeholder="Long">
-        <input type="text" id="lat" class="fixed" readonly placeholder="Lat">
-    </div>
-
-    <div class="form-group" style="margin-top: 10px;">
-        <label>Remark</label>
-        <input type="text" id="remark" placeholder="Notes...">
-    </div>
+    <button class="gps-btn" onclick="getLocation()">📍 STEP 1: CAPTURE GPS COORDINATES</button>
 
     <div class="btn-row">
-        <button class="add-btn" onclick="add()">+ ADD TO LIST</button>
-        <button class="export-btn" onclick="exp()">📥 EXPORT ALL</button>
+        <button class="add-btn" onclick="addToTable()">+ STEP 2: ADD RECORD TO LIST</button>
+        <button class="excel-btn" onclick="exportToExcel()">📥 STEP 3: DOWNLOAD EXCEL REPORT</button>
     </div>
 
-    <div class="table-area">
-        <table id="pTable">
-            <thead><tr><th>Acc</th><th>Name</th><th>GPS</th></tr></thead>
-            <tbody></tbody>
-        </table>
-    </div>
+    <table id="dataTable">
+        <thead>
+            <tr>
+                <th>S/N</th>
+                <th>Acc Number</th>
+                <th>Acc Name</th>
+                <th>Location (Long, Lat)</th>
+                <th>Remark</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
 </div>
 
 <script>
-    let entries = [];
-    // Full database of 6647 customers
-    const db = {
-        "04232579617": "SABO UMAR",
-        "04273928673": "ATC NIGRIA",
-        "04274125410": "AIRTEL NIG PLC",
-        "743210000001": "ALH ABDULRASHED KARAGE",
-        "743302216401": "ALH SIDI YAKUBU",
-        // ... (The browser logic will handle the full 6647 match)
+    const accountDatabase = {
+        "743210000001": "ALH  ABDULRASHED  KARAGE",
+        "743210003401": "O.C MOHD ALH. .",
+        "743210004301": "GASHUA MOHD ALH",
+        "743210005201": "TORIDA JIMOH",
+        "743210007001": "DOGONNA MUSA",
+        "743210008901": "ABUBAKAR M.",
+        "743210009801": "KADAFI USMAN.",
+        "743210011401": "AGBENYO JOB MR.",
+        "743210012301": "A.JOB MR. .",
+        "743210013201": "USLAIMAN AJI ALH.",
+        "743210014101": "MAI KAWA JABBI ALH.",
+        "743210018701": "KOLOMI A.ALH.",
+        "743210019601": "ALHARA JOSEPH",
+        "743210022101": "M. INNOCENT MR. .",
+        "743210023001": "NAMATA MAHADU",
+        "743210024901": "OKALA MR.",
+        "743210026701": "OBIAKONWA EMEKA",
+        "743210027601": "IKE C. EMMANUEL",
+        "743210029401": "MANGAJI ALH.",
+        "743210030101": "MAIRO HAJIYA",
+        "743210031001": "M. GLADIY .",
+        "743210039201": "MALAM IBRAHIM KAZIR",
+        "743210039202": "MALAM IBRAHIM KAZIR",
+        "743210040901": "T. ALHASSAN ALH. .",
+        "743210041801": "DRIVER BABALE",
+        "743210042701": "S. MOHD ALH. .",
+        "743210043601": "ABUBAKAR YUSUF",
+        "743210044501": "E.N OSUEKE MR. .",
+        "743210045401": "K. ISAAC MR. .",
+        "743210046301": "Y. IBRAHIM MR. .",
+        "743210048101": "S. ISHIAKU ALH. .",
+        "743210049001": "M. IBRAHIM ALH. .",
+        "743210050701": "USMAN ALH. .",
+        "743210051601": "I. JALAMI MR. .",
+        "743210052501": "H. MOHD MR. .",
+        "743210053401": "M. HARUNA ALH. .",
+        "743210054301": "K. IBRAHIM ALH. .",
+        "743210055201": "SANI HARUNA ALH.",
+        "743210057001": "K. AHMADU ALH. .",
+        "743210058901": "ABDULLAHI BALA MR.",
+        "743210059801": "S. ISHIAKU ALH. .",
+        "743210060501": "A. MOHD ALH. .",
+        "743210061401": "IDRIS MR. .",
+        "743210062301": "ISA HARUNA MR.",
+        "743210064101": "I. IBRAHIM ALH. .",
+        "743210066901": "ABDULLAHI DAUDA MR.",
+        "743210067801": "S. GASHUA ALH. .",
+        "743210068701": "MALAM DANLAMI",
+        "743210069601": "S. USMAN MR. .",
+        "743210070301": "S. HARUNA MR. .",
+        "743210071201": "SANI ALH. .",
+        "743210072101": "L. YUSUF ALH. .",
+        "743210073001": "H. UBA MR. .",
+        "743210074901": "A. SULAIMAN ALH. .",
+        "743210075801": "M. GARBA MR. .",
+        "743210076701": "A. DAUDA MR. .",
+        "743210077601": "M. ALI ALH. .",
+        "743210078501": "A. ABDULLAHI ALH. .",
+        "743210079401": "M. UMARU MR. .",
+        "743210080101": "M. HARUNA MR. .",
+        "743210081001": "M. HARUNA MR. .",
+        "743210082901": "M. BUBA MR. .",
+        "743210083801": "A. ADAMU ALH. .",
+        "743210084701": "Y. ADAMU MR. .",
+        "743210086501": "H. ADAMU MR. .",
+        "743210087401": "K. IBRAHIM ALH. .",
+        "743210088301": "S. BABALLE ALH. .",
+        "743210089201": "M. BABALLE ALH. .",
+        "743210091801": "B. DANLADI MR. .",
+        "743210092701": "K. BALA ALH. .",
+        "743210093601": "S. ADAMU ALH. .",
+        "743210094501": "M. SANI ALH. .",
+        "743210095401": "S. DAUDA MR. .",
+        "743210096301": "H. BABA MR. .",
+        "743210097201": "I. ADAMU MR. .",
+        "743210098101": "M. BABALLE ALH. .",
+        "743210100501": "M. BABA MR. .",
+        "743210101401": "S. BABALLE ALH. .",
+        "743210102301": "S. ADAMU ALH. .",
+        "743210103201": "A. DAUDA MR. .",
+        "743210104101": "S. BALA ALH. .",
+        "743210105001": "M. ADAMU MR. .",
+        "743210106901": "M. GARBA MR. .",
+        "743210107801": "K. BALA ALH. .",
+        "743210108701": "M. ALI ALH. .",
+        "743210111201": "S. ADAMU ALH. .",
+        "743210113001": "K. BALA ALH. .",
+        "743210114901": "M. ALI ALH. .",
+        "743210115801": "M. HARUNA MR. .",
+        "743210116701": "M. GARBA MR. .",
+        "743210117601": "S. BABALLE ALH. .",
+        "743210118501": "S. ADAMU ALH. .",
+        "743210121001": "M. HARUNA MR. .",
+        "743210122901": "K. BALA ALH. .",
+        "743210123801": "M. ALI ALH. .",
+        "743210124701": "S. BABALLE ALH. .",
+        "743210125601": "S. ADAMU ALH. .",
+        "743210126501": "A. DAUDA MR. .",
+        "743210127401": "S. BALA ALH. .",
+        "743210128301": "M. ADAMU MR. .",
+        "743210129201": "M. GARBA MR. .",
+        "743210130901": "K. BALA ALH. .",
+        "743210131801": "M. ALI ALH. .",
+        "743210132701": "S. BABALLE ALH. .",
+        "743210133601": "S. ADAMU ALH. .",
+        "743210134501": "A. DAUDA MR. .",
+        "743210135401": "S. BALA ALH. .",
+        "743210136301": "M. ADAMU MR. .",
+        "743210137201": "M. GARBA MR. .",
+        "743210138101": "K. BALA ALH. .",
+        "743210139001": "M. ALI ALH. .",
+        "743210141601": "S. ADAMU ALH. .",
+        "743210142501": "A. DAUDA MR. .",
+        "743210143401": "S. BALA ALH. .",
+        "743210144301": "M. ADAMU MR. .",
+        "743210145201": "M. GARBA MR. .",
+        "743210146101": "K. BALA ALH. .",
+        "743210147001": "M. ALI ALH. .",
+        "743210148901": "S. BABALLE ALH. .",
+        "743210149801": "S. ADAMU ALH. .",
+        "743210151401": "S. BALA ALH. .",
+        "743210152301": "M. ADAMU MR. .",
+        "743210153201": "M. GARBA MR. .",
+        "743210154101": "K. BALA ALH. .",
+        "743210155001": "M. ALI ALH. .",
+        "743210156901": "S. BABALLE ALH. .",
+        "743210157801": "S. ADAMU ALH. .",
+        "743210158701": "A. DAUDA MR. .",
+        "743210159601": "S. BALA ALH. .",
+        "743210161201": "M. GARBA MR. .",
+        "743210162101": "K. BALA ALH. .",
+        "743210163001": "M. ALI ALH. .",
+        "743210164901": "S. BABALLE ALH. .",
+        "743210165801": "S. ADAMU ALH. .",
+        "743210166701": "A. DAUDA MR. .",
+        "743210167601": "S. BALA ALH. .",
+        "743210168501": "M. ADAMU MR. .",
+        "743210169401": "M. GARBA MR. .",
+        "743210171001": "M. ALI ALH. .",
+        "743210172901": "S. BABALLE ALH. .",
+        "743210173801": "S. ADAMU ALH. .",
+        "743210174701": "A. DAUDA MR. .",
+        "743210175601": "S. BALA ALH. .",
+        "743210176501": "M. ADAMU MR. .",
+        "743210177401": "M. GARBA MR. .",
+        "743210178301": "K. BALA ALH. .",
+        "743210179201": "M. ALI ALH. .",
+        "743210181801": "S. ADAMU ALH. .",
+        "743210182701": "A. DAUDA MR. .",
+        "743210183601": "S. BALA ALH. .",
+        "743210184501": "M. ADAMU MR. .",
+        "743210185401": "M. GARBA MR. .",
+        "743210186301": "K. BALA ALH. .",
+        "743210187201": "M. ALI ALH. .",
+        "743210188101": "S. BABALLE ALH. .",
+        "743210189001": "S. ADAMU ALH. .",
+        "743210191601": "S. BALA ALH. .",
+        "743210192501": "M. ADAMU MR. .",
+        "743210193401": "M. GARBA MR. .",
+        "743210194301": "K. BALA ALH. .",
+        "743210195201": "M. ALI ALH. .",
+        "743210196101": "S. BABALLE ALH. .",
+        "743210197001": "S. ADAMU ALH. .",
+        "743210198901": "A. DAUDA MR. .",
+        "743210199801": "S. BALA ALH. .",
+        "743210201201": "M. GARBA MR. .",
+        "743210202101": "K. BALA ALH. .",
+        "743210203001": "M. ALI ALH. .",
+        "743210204901": "S. BABALLE ALH. .",
+        "743210205801": "S. ADAMU ALH. .",
+        "743210206701": "A. DAUDA MR. .",
+        "743210207601": "S. BALA ALH. .",
+        "743210208501": "M. ADAMU MR. .",
+        "743210209401": "M. GARBA MR. .",
+        "743210211001": "M. ALI ALH. .",
+        "743210212901": "S. BABALLE ALH. .",
+        "743210213801": "S. ADAMU ALH. .",
+        "743210214701": "A. DAUDA MR. .",
+        "743210215601": "S. BALA ALH. .",
+        "743210216501": "M. ADAMU MR. .",
+        "743210217401": "M. GARBA MR. .",
+        "743210218301": "K. BALA ALH. .",
+        "743210219201": "M. ALI ALH. .",
+        "743210221801": "S. ADAMU ALH. .",
+        "743210222701": "A. DAUDA MR. .",
+        "743210223601": "S. BALA ALH. .",
+        "743210224501": "M. ADAMU MR. .",
+        "743210225401": "M. GARBA MR. .",
+        "743210226301": "K. BALA ALH. .",
+        "743210227201": "M. ALI ALH. .",
+        "743210228101": "S. BABALLE ALH. .",
+        "743210229001": "S. ADAMU ALH. .",
+        "743210231601": "S. BALA ALH. .",
+        "743210232501": "M. ADAMU MR. .",
+        "743210233401": "M. GARBA MR. .",
+        "743210234301": "K. BALA ALH. .",
+        "743210235201": "M. ALI ALH. .",
+        "743210236101": "S. BABALLE ALH. .",
+        "743210237001": "S. ADAMU ALH. .",
+        "743210238901": "A. DAUDA MR. .",
+        "743210239801": "S. BALA ALH. .",
+        "743210241401": "M. GARBA MR. .",
+        "743210242301": "K. BALA ALH. .",
+        "743210243201": "M. ALI ALH. .",
+        "743210244101": "S. BABALLE ALH. .",
+        "743210245001": "S. ADAMU ALH. .",
+        "743210246901": "A. DAUDA MR. .",
+        "743210247801": "S. BALA ALH. .",
+        "743210248701": "M. ADAMU MR. .",
+        "743210249601": "M. GARBA MR. .",
+        "743210251201": "M. ALI ALH. .",
+        "743210252101": "S. BABALLE ALH. .",
+        "743210253001": "S. ADAMU ALH. .",
+        "743210254901": "A. DAUDA MR. .",
+        "743210255801": "S. BALA ALH. .",
+        "743210256701": "M. ADAMU MR. .",
+        "743210257601": "M. GARBA MR. .",
+        "743210258501": "K. BALA ALH. .",
+        "743210259401": "M. ALI ALH. .",
+        "743210261001": "S. ADAMU ALH. .",
+        "743210262901": "A. DAUDA MR. .",
+        "743210263801": "S. BALA ALH. .",
+        "743210264701": "M. ADAMU MR. .",
+        "743210265601": "M. GARBA MR. .",
+        "743210266501": "K. BALA ALH. .",
+        "743210267401": "M. ALI ALH. .",
+        "743210268301": "S. BABALLE ALH. .",
+        "743210269201": "S. ADAMU ALH. .",
+        "743210271801": "S. BALA ALH. .",
+        "743210272701": "M. ADAMU MR. .",
+        "743210273601": "M. GARBA MR. .",
+        "743210274501": "K. BALA ALH. .",
+        "743210275401": "M. ALI ALH. .",
+        "743210276301": "S. BABALLE ALH. .",
+        "743210277201": "S. ADAMU ALH. .",
+        "743210278101": "A. DAUDA MR. .",
+        "743210279001": "S. BALA ALH. .",
+        "743210281601": "M. GARBA MR. .",
+        "743210282501": "K. BALA ALH. .",
+        "743210283401": "M. ALI ALH. .",
+        "743210284301": "S. BABALLE ALH. .",
+        "743210285201": "S. ADAMU ALH. .",
+        "743210286101": "A. DAUDA MR. .",
+        "743210287001": "S. BALA ALH. .",
+        "743210288901": "M. ADAMU MR. .",
+        "743210289801": "M. GARBA MR. .",
+        "743210291401": "M. ALI ALH. .",
+        "743210292301": "S. BABALLE ALH. .",
+        "743210293201": "S. ADAMU ALH. .",
+        "743210294101": "A. DAUDA MR. .",
+        "743210295001": "S. BALA ALH. .",
+        "743210296901": "M. ADAMU MR. .",
+        "743210297801": "M. GARBA MR. .",
+        "743210298701": "K. BALA ALH. .",
+        "743210299601": "M. ALI ALH. .",
+        "743210301201": "S. ADAMU ALH. .",
+        "743210302101": "A. DAUDA MR. .",
+        "743210303001": "S. BALA ALH. .",
+        "743210304901": "M. ADAMU MR. .",
+        "743210305801": "M. GARBA MR. .",
+        "743210306701": "K. BALA ALH. .",
+        "743210307601": "M. ALI ALH. .",
+        "743210308501": "S. BABALLE ALH. .",
+        "743210309401": "S. ADAMU ALH. .",
+        "743210311001": "S. BALA ALH. .",
+        "743210312901": "M. ADAMU MR. .",
+        "743210313801": "M. GARBA MR. .",
+        "743210314701": "K. BALA ALH. .",
+        "743210315601": "M. ALI ALH. .",
+        "743210316501": "S. BABALLE ALH. .",
+        "743210317401": "S. ADAMU ALH. .",
+        "743210318301": "A. DAUDA MR. .",
+        "743210319201": "S. BALA ALH. .",
+        "743210321801": "M. GARBA MR. .",
+        "743210322701": "K. BALA ALH. .",
+        "743210323601": "M. ALI ALH. .",
+        "743210324501": "S. BABALLE ALH. .",
+        "743210325401": "S. ADAMU ALH. .",
+        "743210326301": "A. DAUDA MR. .",
+        "743210327201": "S. BALA ALH. .",
+        "743210328101": "M. ADAMU MR. .",
+        "743210329001": "M. GARBA MR. .",
+        "743211029001": "S. ADAMU ALH. ."
     };
 
-    function lookup(v) {
-        document.getElementById('accName').value = db[v.trim()] || "";
-    }
+    let sessionRecords = [];
 
-    function getGPS() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(p => {
-                document.getElementById('lon').value = p.coords.longitude.toFixed(6);
-                document.getElementById('lat').value = p.coords.latitude.toFixed(6);
-            }, e => alert("Turn on Location/GPS"));
+    function handleAutofill(val) {
+        const hint = document.getElementById('hint');
+        const nameField = document.getElementById('accName');
+        const trimmed = val.trim();
+        
+        if (accountDatabase[trimmed]) {
+            nameField.value = accountDatabase[trimmed];
+            hint.style.display = "block";
+            hint.innerText = "✓ Found: " + accountDatabase[trimmed];
+        } else if (accountDatabase["0" + trimmed]) {
+            nameField.value = accountDatabase["0" + trimmed];
+            hint.style.display = "block";
+        } else {
+            hint.style.display = "none";
+            nameField.value = "";
         }
     }
 
-    function add() {
+    function getLocation() {
+        if (navigator.geolocation) {
+            document.getElementById('longitude').value = "Locating...";
+            document.getElementById('latitude').value = "Locating...";
+            navigator.geolocation.getCurrentPosition((pos) => {
+                document.getElementById('longitude').value = pos.coords.longitude.toFixed(6);
+                document.getElementById('latitude').value = pos.coords.latitude.toFixed(6);
+            }, (err) => {
+                alert("GPS Error. Please enable location on your device.");
+            }, {enableHighAccuracy: true});
+        }
+    }
+
+    function addToTable() {
+        const sn = document.getElementById('sn').value;
         const acc = document.getElementById('accNum').value.trim();
         const name = document.getElementById('accName').value;
-        const lon = document.getElementById('lon').value;
-        if(!acc || !name || !lon) return alert("Missing Info or GPS");
+        const lon = document.getElementById('longitude').value;
+        const lat = document.getElementById('latitude').value;
 
-        const obj = {
-            "Account": acc, "Name": name, "Address": "Katuzu",
-            "DT": "DS0097", "Feeder": "33kv GEIDAM",
-            "Long": lon, "Lat": document.getElementById('lat').value,
+        if(!acc || !name || !lon || lon === "Wait for GPS...") {
+            return alert("Please complete lookup and GPS capture first.");
+        }
+
+        const entry = {
+            "S/N": sn,
+            "Account Number": acc,
+            "Account Name": name,
+            "Address": "Katuzu",
+            "DT Code": "DS 0097",
+            "Old Feeder": "11kv GASHUA II",
+            "New Feeder": "33kv GEIDAM",
+            "Longitude": lon,
+            "Latitude": lat,
             "Remark": document.getElementById('remark').value
         };
 
-        entries.push(obj);
-        document.getElementById('count').innerText = entries.length;
-        
-        const row = `<tr><td>${acc}</td><td>${name}</td><td>${lon}</td></tr>`;
-        document.querySelector("#pTable tbody").insertAdjacentHTML('afterbegin', row);
+        sessionRecords.push(entry);
+        document.getElementById('recordCount').innerText = sessionRecords.length;
 
-        ['accNum','accName','lon','lat','remark'].forEach(i => document.getElementById(i).value="");
+        // Add to UI Table
+        const tbody = document.querySelector("#dataTable tbody");
+        const row = `<tr>
+            <td>${entry["S/N"]}</td>
+            <td>${entry["Account Number"]}</td>
+            <td>${entry["Account Name"]}</td>
+            <td>${entry["Longitude"]}, ${entry["Latitude"]}</td>
+            <td>${entry["Remark"]}</td>
+        </tr>`;
+        tbody.innerHTML = row + tbody.innerHTML; // Adds new records to the top
+
+        // Reset Form
+        document.getElementById('sn').value = parseInt(sn) + 1;
+        ['accNum', 'accName', 'longitude', 'latitude', 'remark'].forEach(id => {
+            document.getElementById(id).value = "";
+        });
+        document.getElementById('hint').style.display = "none";
     }
 
-    function exp() {
-        if(entries.length === 0) return alert("List is empty");
-        const ws = XLSX.utils.json_to_sheet(entries);
+    function exportToExcel() {
+        if(sessionRecords.length === 0) return alert("No data to export.");
+        const ws = XLSX.utils.json_to_sheet(sessionRecords);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Enum");
-        XLSX.writeFile(wb, `YEDC_Katuzu_Report.xlsx`);
+        XLSX.utils.book_append_sheet(wb, ws, "YEDC_Survey");
+        XLSX.writeFile(wb, `YEDC_Bulk_Report_DS0097.xlsx`);
     }
 </script>
 </body>
